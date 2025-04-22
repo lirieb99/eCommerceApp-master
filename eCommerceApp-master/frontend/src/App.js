@@ -4,6 +4,7 @@ import AuthPage from './AuthPage';
 import Dashboard from './Dashboard';
 import Products from './Products';
 import PrivateRoute from './PrivateRoute';
+import Cart from './CartPage';
 
 function App() {
     return (
@@ -12,6 +13,7 @@ function App() {
                 <Route path="/" element={<AuthPage />} />
                 <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
                 <Route path="/products" element={<PrivateRoute><Products /></PrivateRoute>} />
+                <Route path = "/cart" element={<Cart/>}/>
             </Routes>
         </Router>
     );

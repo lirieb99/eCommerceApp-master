@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { fetchProducts, addToCart, addToWishlist } from './api';
+import { fetchProducts, placeSingleOrder, addToWishlist } from './api';
 import { useNavigate } from 'react-router-dom';
+import { addToCart } from './api'; // ✅ FIX ReferenceError
+import { deleteProduct } from './api'; // për fshirjen e produktit
+
 
 function Dashboard() {
     const [products, setProducts] = useState([]);
@@ -25,15 +28,16 @@ function Dashboard() {
         navigate('/');
     };
 
-    const handleOrder = async (productId) => {
+    const handleOrder = async (productId, price) => {
         try {
-            await addToCart(productId);
-            setMessage('Product added to cart!');
+            await placeSingleOrder(productId, price);
+            setMessage('Order placed successfully!');
         } catch (err) {
-            setMessage('Failed to add to cart');
+            setMessage('Failed to place order');
             console.error(err);
         }
     };
+    
 
     const handleWishlist = async (productId) => {
         try {
@@ -58,42 +62,90 @@ function Dashboard() {
     const handleSubmitReview = (productId) => {
         const { rating, comment } = reviews[productId] || {};
         console.log('Review submitted:', { productId, rating, comment });
-        // TODO: call backend API for review
     };
 
-    return (
-        <div className="dashboard-container">
-            <div className="header">
-                <h2>Available Products</h2>
-                <button className="logout-button" onClick={handleLogout}>Logout</button>
+    const handleAddToCart = async (productId) => {
+        try {
+          await addToCart(productId);
+          setMessage("Product added to cart!");
+        } catch (error) {
+          console.error(error);
+          setMessage("Failed to add to cart.");
+        }
+      };
+      const handleDeleteProduct = async (productId) => {
+        if (!window.confirm("Are you sure you want to delete this product?")) return;
+      
+        try {
+          await deleteProduct(productId);
+          setProducts(prev => prev.filter(p => p._id !== productId));
+          setMessage("Product deleted successfully!");
+        } catch (err) {
+          setMessage("Failed to delete product");
+          console.error(err);
+        }
+      };
+      
+      
+      return (
+        <div className="page-container">
+          {/* Header */}
+          <header className="main-header">
+            <div className="header-left">
+              <h1>My Product Store</h1>
             </div>
-
+            <div className="header-right">
+              <button className="cart-button" onClick={() => navigate('/cart')}>
+                🛒 Cart
+              </button>
+            </div>
+          </header>
+      
+          {/* Content */}
+          <main className="dashboard-container">
             {message && <p>{message}</p>}
-
+      
             <div className="products-grid">
-                {products.map(product => (
-                    <div key={product._id} className="product-card">
-                        <img src={`/images/${product.image}`} alt={product.name} />
-                        <h3>{product.name}</h3>
-                        <p>{product.description}</p>
-                        <p><strong>Price: </strong>${product.price}</p>
-                        <button onClick={() => handleOrder(product._id)}>Order Now</button>
-                        <button className="wishlist-button" onClick={() => handleWishlist(product._id)}>💖 Save to Wishlist</button>
+              {products.map(product => (
+                <div key={product._id} className="product-card">
+                  <img src={`/images/${product.image}`} alt={product.name} className="product-img" />
+                  <h3>{product.name}</h3>
+                  <p>{product.description}</p>
+                  <p><strong>Price: </strong>${product.price}</p>
+      
+                  <button onClick={() => handleAddToCart(product._id)}>Add to Cart</button>
+                  <button onClick={() => handleOrder(product._id, product.price)}>Order Now</button>
+                  <button className="wishlist-button" onClick={() => handleWishlist(product._id)}>💖 Save to Wishlist</button>
+      
+                    
 
-                        <div className="review-form">
-                            <h4>Leave a Review</h4>
-                            <select value={reviews[product._id]?.rating || ''} onChange={(e) => handleReviewChange(product._id, 'rating', e.target.value)}>
-                                <option value="">Select Rating</option>
-                                {[1,2,3,4,5].map(r => <option key={r} value={r}>{r} Star{r > 1 ? 's' : ''}</option>)}
-                            </select>
-                            <textarea placeholder="Your comment..." value={reviews[product._id]?.comment || ''} onChange={(e) => handleReviewChange(product._id, 'comment', e.target.value)} />
-                            <button onClick={() => handleSubmitReview(product._id)}>Submit Review</button>
-                        </div>
-                    </div>
-                ))}
+                  <div className="review-form">
+                    <h4>Leave a Review</h4>
+                    <select value={reviews[product._id]?.rating || ''} onChange={(e) => handleReviewChange(product._id, 'rating', e.target.value)}>
+                      <option value="">Select Rating</option>
+                      {[1,2,3,4,5].map(r => <option key={r} value={r}>{r} Star{r > 1 ? 's' : ''}</option>)}
+                    </select>
+                    <textarea
+                      placeholder="Your comment..."
+                      value={reviews[product._id]?.comment || ''}
+                      onChange={(e) => handleReviewChange(product._id, 'comment', e.target.value)}
+                    />
+                    <button onClick={() => handleSubmitReview(product._id)}>Submit Review</button>
+                    
+                    
+                  </div>
+                </div>
+              ))}
             </div>
+          </main>
+      
+          {/* Footer */}
+          <footer className="main-footer">
+            <button className="logout-button" onClick={handleLogout}>Logout</button>
+            <p>&copy; {new Date().getFullYear()} My Product Store. All rights reserved.</p>
+          </footer>
         </div>
-    );
-}
+      );
+    };
 
 export default Dashboard;

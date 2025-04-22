@@ -28,12 +28,38 @@ export const loginUser = async (userData) => api.post('/auth/login', userData);
 
 export const fetchProducts = async () => api.get('/products');
 
-export const addToCart = async (productId) => {
-    return api.post('/cart/add', { productId, quantity: 1 });
-};
 
 export const addToWishlist = async (productId) => {
     return api.post('/wishlist/add', { productId });
 };
 
+export const placeSingleOrder = async (productId, price) => {
+    const userId = localStorage.getItem('userId'); // ose dekodo nga token në backend
+    return api.post('/orders', {
+        userId,
+        products: [
+            {
+                productId,
+                quantity: 1,
+                price
+            }
+        ]
+    });
+};
+export const addToCart = async (productId, quantity = 1) => {
+    return api.post('/cart/add', { productId, quantity });
+  };
+  
+  export const getCartItems = () => api.get('/cart');
+
+export const removeFromCart = (productId) =>
+  api.post('/cart/remove', { productId });
+
+// për checkout me shumë produkte:
+export const placeCartOrder = async (products) =>
+  api.post('/orders', { products }); // userId merret nga token
+
+export const deleteProduct = async (productId) => {
+    return api.delete(`/products/${productId}`);
+  };
 export default api;
